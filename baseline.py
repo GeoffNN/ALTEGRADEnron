@@ -3,22 +3,23 @@ import operator
 import pandas as pd
 from collections import Counter
 
-#path_to_data = # fill me!
+# path_to_data = # fill me!
 
 ##########################
-# load some of the files #                           
+# load some of the files #
 ##########################
 
 training = pd.read_csv(path_to_data + 'training_set.csv', sep=',', header=0)
 
-training_info = pd.read_csv(path_to_data + 'training_info.csv', sep=',', header=0)
+training_info = pd.read_csv(
+    path_to_data + 'training_info.csv', sep=',', header=0)
 
 test = pd.read_csv(path_to_data + 'test_set.csv', sep=',', header=0)
 
 ################################
-# create some handy structures #                    
+# create some handy structures #
 ################################
-                            
+
 # convert training set to dictionary
 emails_ids_per_sender = {}
 for index, series in training.iterrows():
@@ -37,38 +38,42 @@ i = 0
 for sender, ids in emails_ids_per_sender.iteritems():
     recs_temp = []
     for my_id in ids:
-        recipients = training_info[training_info['mid']==int(my_id)]['recipients'].tolist()
+        recipients = training_info[training_info['mid'] == int(my_id)][
+            'recipients'].tolist()
         recipients = recipients[0].split(' ')
         # keep only legitimate email addresses
         recipients = [rec for rec in recipients if '@' in rec]
         recs_temp.append(recipients)
-    # flatten    
+    # flatten
     recs_temp = [elt for sublist in recs_temp for elt in sublist]
     # compute recipient counts
     rec_occ = dict(Counter(recs_temp))
     # order by frequency
-    sorted_rec_occ = sorted(rec_occ.items(), key=operator.itemgetter(1), reverse = True)
+    sorted_rec_occ = sorted(
+        rec_occ.items(), key=operator.itemgetter(1), reverse=True)
     # save
     address_books[sender] = sorted_rec_occ
-    
+
     if i % 10 == 0:
         print i
     i += 1
-  
-# save all unique recipient names    
-all_recs = list(set([elt[0] for sublist in address_books.values() for elt in sublist]))
 
-# save all unique user names 
+# save all unique recipient names
+all_recs = list(
+    set([elt[0] for sublist in address_books.values() for elt in sublist]))
+
+# save all unique user names
 all_users = []
 all_users.extend(all_senders)
 all_users.extend(all_recs)
 all_users = list(set(all_users))
 
 #############
-# baselines #                           
+# baselines #
 #############
 
-# will contain email ids, predictions for random baseline, and predictions for frequency baseline
+# will contain email ids, predictions for random baseline, and predictions
+# for frequency baseline
 predictions_per_sender = {}
 
 # number of recipients to predict
@@ -89,13 +94,13 @@ for index, row in test.iterrows():
         random_preds.append(random.sample(all_users, k))
         # for the frequency baseline, the predictions are always the same
         freq_preds.append(k_most)
-    predictions_per_sender[sender] = [ids_predict,random_preds,freq_preds]	
+    predictions_per_sender[sender] = [ids_predict, random_preds, freq_preds]
 
 #################################################
-# write predictions in proper format for Kaggle #                           
+# write predictions in proper format for Kaggle #
 #################################################
 
-#path_to_results = # fill me!
+# path_to_results = # fill me!
 
 with open(path_to_results + 'predictions_random.txt', 'wb') as my_file:
     my_file.write('mid,recipients' + '\n')
