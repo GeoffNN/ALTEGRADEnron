@@ -18,11 +18,11 @@ test = pd.read_csv(path_to_data + 'test_set.csv', sep=',', header=0)
 
 # Fit tfidf
 
-token_dict = tools.body_dict_from_panda(training_info)
+body_dict = tools.body_dict_from_panda(training_info)
 
 print('Fitting tfidf, this will take some time...')
 
-tfidf = tools.get_tfidf(token_dict, 0.001, 0.10)
+tfidf = tools.get_tfidf(body_dict, 0.001, 0.10)
 
 
 # Test on some random sentence

@@ -32,16 +32,16 @@ def dict_from_file(file_path):
 
 
 def body_dict_from_panda(dataframe):
-    """Constructs disctionnary of bodies from dataframe with mid as key"""
-    token_dict = {}
+    """Constructs dictionnary of bodies from dataframe with mid as key"""
+    body_dict = {}
     nb_total = len(dataframe)
     print('Constructing dictionnary from dataframe...')
     for id, row in dataframe.iterrows():
         if(id % 10000 == 0):
             print('{id} / {nb_total}'.format(id=id, nb_total=nb_total))
-        token_dict[row.mid] = row.body
+        body_dict[row.mid] = row.body
     print('done !')
-    return token_dict
+    return body_dict
 
 
 def get_tokens(body):
