@@ -3,7 +3,9 @@
 *.png
 *.csv
 *.txt
-data/*
-results/*
 *.ipynb
+
 .idea/
+*/__pycache__/
+results/*
+data/*
