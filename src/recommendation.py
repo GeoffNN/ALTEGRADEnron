@@ -4,6 +4,7 @@ from numpy.linalg import norm
 
 from src.graph import get_neighbors
 
+
 # Intuitive pipeline
 def get_recommandation(mail_body, mail_date, sender, graph):
     global conversation_ids
@@ -15,9 +16,11 @@ def get_recommandation(mail_body, mail_date, sender, graph):
     sims.sort(inplace=True)
     return sims[:10].index
 
+
 def centroid(mails_ids):
     # TODO: compute centroid of the given email list
-pass
+    pass
+
 
 def similarity(f_mail1, f_mail2):
-    return np.dot(f_mail1, f_mail2) / (norm(f_mail1)*norm(f_mail2))
+    return np.dot(f_mail1, f_mail2) / (norm(f_mail1) * norm(f_mail2))
