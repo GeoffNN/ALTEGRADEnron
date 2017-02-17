@@ -17,9 +17,10 @@ def get_recommandation(mail_body, mail_date, sender, graph):
     return sims[:10].index
 
 
-def centroid(mails_ids):
-    # TODO: compute centroid of the given email list
-    pass
+def centroid(mail_features):
+    res = mail_features.mean(axis=0)
+    assert len(res) == len(mail_features.columns)
+    return res
 
 
 def similarity(f_mail1, f_mail2):
