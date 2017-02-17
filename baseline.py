@@ -16,6 +16,9 @@ training_info = pd.read_csv(
 
 test = pd.read_csv(path_to_data + 'test_set.csv', sep=',', header=0)
 
+test_info = pd.read_csv(
+    path_to_data + 'test_info.csv', sep=',', header=0)
+
 ################################
 # create some handy structures #
 ################################
