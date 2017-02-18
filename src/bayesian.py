@@ -1,5 +1,6 @@
 import src.tools as tools
-from tqdm import tqdm
+try: from tqdm import tqdm
+except ImportError: tqdm = lambda x:x
 
 def compute_recipient_prior(df_info):
     all_recipients = df_info.recipients.values
@@ -89,21 +90,32 @@ def predict(recipient, sender, email, probs, a=1/3, b=1/3, c=1/3):
     # returns P(R|S, E)
     prob = 1
     # P(R)
-    if recipient not in p_r.keys():
+    try:
+        prob *= p_r[recipient]
+    except KeyError:
         return 0
-    else:
-        prob *= p_r.get(recipient, 0)
     # P(S|R)
-    if sender not in p_s_r[recipient].keys():
+    try:
+        prob *= p_s_r[recipient][sender]
+    except KeyError:
         return 0
-    else:
-        prob *= p_s_r[recipient].get(sender, 0)
     # P(E|R, S)
     words = tools.get_tokens(email)
     for word in words:
-        prob *= ( a * p_w_r_s[recipient][sender].get(word, 0)
-                + b * p_w_r[recipient].get(word, 0) 
-                + c * p_w.get(word, 0))
+        temp = 0
+        try:
+            temp += a * p_w_r_s[recipient][sender][word]
+        except KeyError:
+            pass
+        try:
+            temp += b * p_w_r[recipient][word]
+        except KeyError:
+            pass
+        try:
+            temp += c * p_w[word]
+        except KeyError:
+            pass       
+        prob *= temp
     return prob
 
 from heapq import heappop, heappush

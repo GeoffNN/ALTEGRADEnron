@@ -1,4 +1,5 @@
 import pandas as pd
+import pickle as pkl
 import src.bayesian as bayes
 
 path_to_data = 'data/'
@@ -21,6 +22,7 @@ probs['p_s_r'] = p_s_r
 probs['p_w_r_s'] = p_w_r_s
 probs['p_w_r'] = p_w_r
 probs['p_w'] = p_w
+pkl.dump(probs, open('probs.pkl', 'wb'))
 
 mail_probable = list(training_info[training_info['mid'] == 158713].body)[0]
 mail_unprobable = list(training_info[training_info['mid'] == 60].body)[0]
@@ -29,7 +31,10 @@ print(bayes.predict('karen.buckley@enron.com', 'jason.wolfe@enron.com', mail_pro
 print(bayes.predict('karen.buckley@enron.com', 'jason.wolfe@enron.com', mail_unprobable, probs))
 
 res = bayes.compute_results(training, training_info)
+pkl.dump(res, open('res.pkl', 'wb'))
+
 res = bayes.compute_results(test, test_info)
+pkl.dump(res2, open('res2.pkl', 'wb'))
 
 training_info[training_info['mid'] == ].receivers()
 
