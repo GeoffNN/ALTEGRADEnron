@@ -1,3 +1,4 @@
+import numpy as np
 import src.tools as tools
 try: from tqdm import tqdm
 except ImportError: tqdm = lambda x:x
@@ -42,16 +43,21 @@ def compute_mail_likelihood_given_recipient_and_sender(df, df_info):
     res_1 = {}
     res_2 = {}
     res_3 = {}
+    recipients_given_sender = {}
     pbar = tqdm(range(len(df)))
     # get counts
     for i in pbar:
         sender = df.loc[i, 'sender']
         mids = df.loc[i, 'mids'].split()
+        recipients_tmp = []
         for mid in mids:
             recipients = list(df_info.loc[df_info['mid'] == int(mid), 'recipients'])[0].split()
+            recipients_tmp = np.union1d(recipients_tmp, recipients)
             body = list(df_info.loc[df_info['mid'] == int(mid), 'body'])[0]
             words = tools.get_tokens(body)
             for recipient in recipients:
+                if recipient not in recipients_tmp:
+                    recipients_tmp.append(recipient)
                 for word in words:
                     # P(w)
                     res_1[word] = res_1.get(word, 0) + 1
@@ -62,6 +68,8 @@ def compute_mail_likelihood_given_recipient_and_sender(df, df_info):
                     res_3[recipient] = res_3.get(recipient, {})
                     res_3[recipient][sender] = res_3[recipient].get(sender, {})
                     res_3[recipient][sender][word] = res_3[recipient][sender].get(word, 0) + 1
+        # store all recipients for that sender
+        recipients_given_sender[sender] = recipients_tmp
     # get P(w), normalize to obtain probabilities
     total = sum(res_1.values())
     for word in res_1:
@@ -78,15 +86,15 @@ def compute_mail_likelihood_given_recipient_and_sender(df, df_info):
             for word in res_3[recipient][sender]:
                 res_3[recipient][sender][word] /= total
 
-    return res_1, res_2, res_3
+    return res_1, res_2, res_3, recipients_given_sender
 
-def predict(recipient, sender, email, probs, a=1/3, b=1/3, c=1/3):
-    # unpack probs
-    p_r = probs['p_r']
-    p_s_r = probs['p_s_r']
-    p_w_r_s = probs['p_w_r_s']
-    p_w_r = probs['p_w_r']
-    p_w = probs['p_w']
+def predict(recipient, sender, email, data, a=1/3, b=1/3, c=1/3):
+    # unpack data
+    p_r = data['p_r']
+    p_s_r = data['p_s_r']
+    p_w_r_s = data['p_w_r_s']
+    p_w_r = data['p_w_r']
+    p_w = data['p_w']
     # returns P(R|S, E)
     prob = 1
     # P(R)
@@ -120,22 +128,27 @@ def predict(recipient, sender, email, probs, a=1/3, b=1/3, c=1/3):
 
 from heapq import heappop, heappush
 
-def compute_results(df, df_info, all_recipients, probs, a=1/3, b=1/3, c=1/3):
+def compute_results(df, df_info, data, a=1/3, b=1/3, c=1/3):
     res = {}
-    pbar = tqdm(range(len(df)))
+    r_s = data['r_s']
+    pbar = (range(len(df)))
     for i in pbar:
+        print(i)
         sender = df.loc[i, 'sender']
         mids = df.loc[i, 'mids'].split()
         for mid in mids:
             heap = []
             email = list(df_info.loc[df_info['mid'] == int(mid), 'body'])[0]
-            # only keep top 10 receivers
-            for recipient in all_recipients[:10]:
-                prob = predict(recipient, sender, email, probs, a, b, c) 
+            # only keep top < 10 receivers
+            recipient_candidates = r_s[sender]
+            n = len(recipient_candidates)
+            for recipient in recipient_candidates[:min(n, 10)]:
+                prob = predict(recipient, sender, email, data, a, b, c) 
                 heappush(heap, (prob, recipient))
-            for recipient in all_recipients[10:]:
-                prob = predict(recipient, sender, email, probs, a, b, c) 
-                heappush(heap, (prob, recipient))                     
-                heappop(heap)
-        res[mid] = heap
+            if n > 10:
+                for recipient in recipient_candidates[10:]:
+                    prob = predict(recipient, sender, email, data, a, b, c) 
+                    heappush(heap, (prob, recipient))                     
+                    heappop(heap)
+            res[mid] = heap[::-1] #first element has higher prob
     return res

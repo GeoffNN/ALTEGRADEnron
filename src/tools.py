@@ -56,3 +56,15 @@ def get_tfidf(token_dict, min_df=0.001, max_df=0.10):
     tfidf = TfidfVectorizer(tokenizer=get_tokens, min_df=min_df, max_df=max_df)
     tfs = tfidf.fit_transform(token_dict.values())
     return tfidf
+
+  
+def write_results(results, path_to_results, results_name):
+    """
+    Writes results to csv file for kaggle submission
+    result must be a dict {mid:[(prob1, sender1), ...]}
+    """
+    with open(path_to_results + results_name, 'wb') as f:
+        f.write(bytes('mid,recipients\n', 'UTF-8'))
+        for mid, preds in results.items():
+            preds_no_prob = [x[1] for x in preds]
+            f.write(bytes(str(mid) + ',' + ' '.join(preds_no_prob) + '\n', 'UTF-8'))
