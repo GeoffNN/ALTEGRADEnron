@@ -4,6 +4,7 @@
 *.csv
 *.txt
 *.ipynb
+*.DS_Store
 
 .idea/
 */__pycache__/
