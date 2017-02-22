@@ -95,7 +95,6 @@ def predict(recipient, sender, email, data, a=1/3, b=1/3, c=1/3):
     p_w_r_s = data['p_w_r_s']
     p_w_r = data['p_w_r']
     p_w = data['p_w']
-    # returns P(R|S, E)
     prob = 1
     # P(R)
     try:
@@ -123,7 +122,10 @@ def predict(recipient, sender, email, data, a=1/3, b=1/3, c=1/3):
             temp += c * p_w[word]
         except KeyError:
             pass       
-        prob *= temp
+        if temp: 
+            prob *= temp
+            prob = np.power(prob, 1/3) # to avoid too low probailiies
+            #print(prob, temp)
     return prob
 
 from heapq import heappop, heappush
@@ -150,5 +152,8 @@ def compute_results(df, df_info, data, a=1/3, b=1/3, c=1/3):
                     prob = predict(recipient, sender, email, data, a, b, c) 
                     heappush(heap, (prob, recipient))                     
                     heappop(heap)
-            res[mid] = heap[::-1] #first element has higher prob
+            res_tmp = []
+            while heap:
+                res_tmp = [heappop(heap)] + res_tmp
+            res[mid] = res_tmp
     return res
