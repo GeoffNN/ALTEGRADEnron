@@ -34,6 +34,7 @@ all_senders = emails_ids_per_sender.keys()
 # create address book with frequency information for each user
 address_books = {}
 i = 0
+conversation_ids = {}
 
 for sender, ids in emails_ids_per_sender.items():
     recs_temp = []
@@ -44,8 +45,14 @@ for sender, ids in emails_ids_per_sender.items():
         # keep only legitimate email addresses
         recipients = [rec for rec in recipients if '@' in rec]
         recs_temp.append(recipients)
+        for rec in recipients:
+            if (sender, rec) in conversation_ids.keys():
+                conversation_ids[(sender, rec)].append(my_id)
+            else:
+                conversation_ids[(sender, rec)] = [my_id]
     # flatten
     recs_temp = [elt for sublist in recs_temp for elt in sublist]
+
     # compute recipient counts
     rec_occ = dict(Counter(recs_temp))
     # order by frequency
