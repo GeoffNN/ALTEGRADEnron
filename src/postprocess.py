@@ -4,7 +4,7 @@ def write_results_ranked(predictions_per_sender,
     Writes results to csv file for kaggle submission
     result must be a dict {mid:[recipient1, recipient2, ...]}
     """
-    with open(path_to_results + result_name, 'wb') as my_file:
+    with open(path_to_results + results_name, 'wb') as my_file:
         my_file.write(bytes('mid,recipients\n', 'UTF-8'))
         for sender, preds in predictions_per_sender.items():
             ids = preds[0]
