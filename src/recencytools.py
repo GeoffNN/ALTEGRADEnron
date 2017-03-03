@@ -89,8 +89,7 @@ def get_recency_address_books(emails_ids_per_sender, email_df, beta):
     return address_books
 
 
-def predictions_from_addressbook(test_df, address_books, path_to_results,
-                                 result_name, k=10):
+def predictions_from_addressbook(test_df, address_books, k=10):
     """
     Writes results to csv file for kaggle submission
     for text-independent models (frequency, recency)
