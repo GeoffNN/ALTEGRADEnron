@@ -3,10 +3,10 @@
 *.png
 *.csv
 *.txt
-*.ipynb
 .DS_Store
 
 .idea/
 */__pycache__/
 results/*
 data/*
+.ipynb_checkpoints/
