@@ -19,9 +19,9 @@ def timeit(f):
     return timed
 
 
-def dict_to_file(file_path):
+def dict_to_file(dictionnary, file_path):
     with open(file_path, 'w') as outfile:
-        json.dump(token_dict, outfile)
+        json.dump(dictionnary, outfile)
     print('Done writing dict to file!')
 
 
