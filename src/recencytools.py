@@ -89,6 +89,31 @@ def get_recency_address_books(emails_ids_per_sender, email_df, beta):
     return address_books
 
 
+def predictions_from_addressbook(test_df, address_books, path_to_results,
+                                 result_name, k=10):
+    """
+    Writes results to csv file for kaggle submission
+    for text-independent models (frequency, recency)
+    address_books must be a dict with sender as key and recpient as value
+    with recipients ordered according to rank
+    """
+    predictions_per_sender = {}
+    for index, row in test_df.iterrows():
+        name_ids = row.tolist()
+        sender = name_ids[0]
+        # get IDs of the emails for which recipient prediction is needed
+        mids_predict = name_ids[1].split(' ')
+        mids_predict = [int(my_id) for my_id in mids_predict]
+        recency_preds = []
+        # select k most frequent recipients for the user
+        k_most = [elt[0] for elt in address_books[sender][:k]]
+        for id_predict in mids_predict:
+            # for recency baselines, the predictions are always the same
+            recency_preds.append(k_most)
+        predictions_per_sender[sender] = [mids_predict, recency_preds]
+    return predictions_per_sender
+
+
 def get_email_ranks(email_df):
     """
     Creates dictionnary that links mid to time rank
