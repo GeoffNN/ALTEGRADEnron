@@ -11,6 +11,12 @@ def get_email_ids_per_sender(email_df):
     return emails_ids_per_sender
 
 
+def get_recipients(email_df, mid):
+    recipients = email_df[email_df['mid'] == int(mid)]['recipients'].tolist()
+    recipients = recipients[0].split(' ')
+    return recipients
+
+
 def body_dict_from_panda(dataframe):
     """
     Constructs dictionnary of bodies from dataframe with mid as key
