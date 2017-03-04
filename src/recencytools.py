@@ -89,20 +89,18 @@ def get_recency_address_books(emails_ids_per_sender, email_df, beta):
     return address_books
 
 
-def predictions_from_addressbook(test_df, address_books, k=10):
+def predictions_from_addressbook(test_dic, address_books, k=10):
     """
     Writes results to csv file for kaggle submission
     for text-independent models (frequency, recency)
-    address_books must be a dict with sender as key and recpient as value
+    @address_books must be a dict with sender as key and recpient as value
     with recipients ordered according to rank
+    @test_dic is a dictionnary with email address as key and mid list as value
+    as returned by get_restricted_email_ids_per_sender or
+    get_email_ids_per_sender from preprocess.py
     """
     predictions_per_sender = {}
-    for index, row in test_df.iterrows():
-        name_ids = row.tolist()
-        sender = name_ids[0]
-        # get IDs of the emails for which recipient prediction is needed
-        mids_predict = name_ids[1].split(' ')
-        mids_predict = [int(my_id) for my_id in mids_predict]
+    for sender, mids_predict in test_dic.items():
         recency_preds = []
         # select k most frequent recipients for the user
         k_most = [elt[0] for elt in address_books[sender][:k]]
