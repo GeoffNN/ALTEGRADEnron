@@ -1,13 +1,12 @@
-
-def write_results_ranked(predictions_per_mid,
-                         path_to_results, results_name):
+def write_recency_results(predictions_per_sender,
+                          path_to_results, results_name):
     """
     Writes results to csv file for kaggle submission
     result must be a dict {sender:[[mids,[senders, senders, ...]]}
     """
     with open(path_to_results + results_name, 'wb') as my_file:
         my_file.write(bytes('mid,recipients\n', 'UTF-8'))
-        for sender, preds in predictions_per_mid.items():
+        for sender, preds in predictions_per_sender.items():
             ids = preds[0]
             freq_preds = preds[1]
             for index, my_preds in enumerate(freq_preds):

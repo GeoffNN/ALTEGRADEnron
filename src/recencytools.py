@@ -13,11 +13,11 @@ def add_time_rank_to_dataframe(df):
     df.loc[correct_prefix, 'date'] = min_date_string
 
     # Convert dates to timestamps
-    df['parsed_date'] = pd.to_datetime(df['date'], yearfirst=True)
+    df['date'] = pd.to_datetime(df['date'], yearfirst=True)
 
     # Add time rank column and sort dataframe
-    df['time_rank'] = df['parsed_date'].rank(ascending=False)
-    df = df.sort_values('parsed_date')
+    df['time_rank'] = df['date'].rank(ascending=False)
+    df = df.sort_values('date')
     return df
 
 
@@ -25,10 +25,9 @@ def recency_predictions_to_standard(recency_predictions):
     standard_prediction = {}
     for sender, predictions in recency_predictions.items():
         mids = predictions[0]
-        if(mids):  # at least one mid for sender
-            recipients = predictions[1][0]
-            for mid in mids:
-                standard_prediction[mid] = recipients
+        recipients = predictions[1][1]
+        for mid in mids:
+            standard_prediction[mid] = recipients
     return standard_prediction
 
 
@@ -100,11 +99,7 @@ def get_recency_address_books(emails_ids_per_sender, email_df, beta):
     return address_books
 
 
-<<<<<<< HEAD
-def predictions_from_addressbook(test_dic, address_books, keep_all=False, k=10):
-=======
 def predictions_from_addressbook(test_dic, address_books, k=10):
->>>>>>> Remove code redundancy so that get_email_ids_per_sender is used instead of csv as entry for prediction function in recency model
     """
     Writes results to csv file for kaggle submission
     for text-independent models (frequency, recency)
@@ -117,11 +112,8 @@ def predictions_from_addressbook(test_dic, address_books, k=10):
     predictions_per_sender = {}
     for sender, mids_predict in test_dic.items():
         recency_preds = []
-        if(keep_all):
-            k_most = [elt[0] for elt in address_books[sender]]
-        else:
-            # select k most frequent recipients for the user
-            k_most = [elt[0] for elt in address_books[sender][:k]]
+        # select k most frequent recipients for the user
+        k_most = [elt[0] for elt in address_books[sender][:k]]
         for id_predict in mids_predict:
             # for recency baselines, the predictions are always the same
             recency_preds.append(k_most)
