@@ -100,7 +100,11 @@ def get_recency_address_books(emails_ids_per_sender, email_df, beta):
     return address_books
 
 
+<<<<<<< HEAD
 def predictions_from_addressbook(test_dic, address_books, keep_all=False, k=10):
+=======
+def predictions_from_addressbook(test_dic, address_books, k=10):
+>>>>>>> Remove code redundancy so that get_email_ids_per_sender is used instead of csv as entry for prediction function in recency model
     """
     Writes results to csv file for kaggle submission
     for text-independent models (frequency, recency)
