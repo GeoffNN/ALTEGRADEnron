@@ -21,6 +21,16 @@ def add_time_rank_to_dataframe(df):
     return df
 
 
+def recency_predictions_to_standard(recency_predictions):
+    standard_prediction = {}
+    for sender, predictions in recency_predictions.items():
+        mids = predictions[0]
+        recipients = predictions[1][1]
+        for mid in mids:
+            standard_prediction[mid] = recipients
+    return standard_prediction
+
+
 def get_frequency_address_books(emails_ids_per_sender, email_df):
     """
     Create address book with frequency information for each user
