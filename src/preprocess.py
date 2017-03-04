@@ -7,7 +7,33 @@ def get_email_ids_per_sender(email_df):
         row = series.tolist()
         sender = row[0]
         ids = row[1:][0].split(' ')
+        ids = [int(mid) for mid in ids]
         emails_ids_per_sender[sender] = ids
+    return emails_ids_per_sender
+
+
+def get_restricted_email_ids_per_sender(email_df, mids):
+    """
+    returns dictionnary with email address as key and mid list as value
+    mid list is filtered to contain only values present in @mids
+    """
+    emails_ids_per_sender = {}
+    mids = [int(mid) for mid in mids]
+    mids = list(mids)
+    sender_counter = 0
+    for index, series in email_df.iterrows():
+        row = series.tolist()
+        sender = row[0]
+        ids = row[1:][0].split(' ')
+        ids = [int(mid) for mid in ids]
+        ids = [mid for mid in ids if mid in mids]
+        emails_ids_per_sender[sender] = ids
+
+        # Display advancement
+        if(sender_counter % 20 == 0):
+            print('processed {sender_nb} senders'.format(
+                sender_nb=sender_counter))
+        sender_counter += 1
     return emails_ids_per_sender
 
 
