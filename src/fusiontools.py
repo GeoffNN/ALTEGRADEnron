@@ -4,11 +4,12 @@ import operator
 
 
 def reciprocal_rank_score(rank, constant):
-    # return 1 / (constant + rank)
-    return math.exp(-rank / constant)
+    return 1 / (constant + rank)
+    # return math.exp(-rank / constant)
 
 
-def reciprocal_rerank(models, ranking_constant, weights=None):
+def reciprocal_rerank(models, ranking_constant,
+                      nb_recipients=10, weights=None):
     fusion_dic = {}
     for mid in models[0]:
         all_recipients = [
@@ -36,5 +37,6 @@ def reciprocal_rerank(models, ranking_constant, weights=None):
         # ...] format
         reranked_recipients = [recipient[0]
                                for recipient in sorted_recipient_ranks]
-        fusion_dic[mid] = reranked_recipients
+        # Keep only top predictions
+        fusion_dic[mid] = reranked_recipients[:nb_recipients]
     return fusion_dic
