@@ -3,6 +3,7 @@ import math
 import operator
 
 
+<<<<<<< HEAD
 def reciprocal_rank_score(rank, constant, ranking='linear'):
     if (ranking == 'linear'):
         score = 1 / (constant + rank)
@@ -16,6 +17,14 @@ def reciprocal_rank_score(rank, constant, ranking='linear'):
 
 def reciprocal_rerank(models, ranking_constant,
                       nb_recipients=10, weights=None):
+=======
+def reciprocal_rank_score(rank, constant):
+    # return 1 / (constant + rank)
+    return math.exp(-rank / constant)
+
+
+def reciprocal_rerank(models, ranking_constant, weights=None):
+>>>>>>> Add model fusion
     fusion_dic = {}
     for mid in models[0]:
         all_recipients = [
@@ -43,6 +52,7 @@ def reciprocal_rerank(models, ranking_constant,
         # ...] format
         reranked_recipients = [recipient[0]
                                for recipient in sorted_recipient_ranks]
+<<<<<<< HEAD
         # Keep only top predictions
         fusion_dic[mid] = reranked_recipients[:nb_recipients]
     return fusion_dic
@@ -58,3 +68,7 @@ def keep_only_max_recips(dic_ranks, max_recips):
     for mid, recipients in dic_ranks.items():
         cropped_recips[int(mid)] = recipients[:max_recips]
     return cropped_recips
+=======
+        fusion_dic[mid] = reranked_recipients
+    return fusion_dic
+>>>>>>> Add model fusion
