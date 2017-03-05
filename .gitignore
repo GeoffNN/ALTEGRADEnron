@@ -8,5 +8,8 @@
 .idea/
 */__pycache__/
 results/*
-data/*
 .ipynb_checkpoints/
+
+models/*
+ranks_val/*
+data/*
