@@ -25,9 +25,10 @@ def recency_predictions_to_standard(recency_predictions):
     standard_prediction = {}
     for sender, predictions in recency_predictions.items():
         mids = predictions[0]
-        recipients = predictions[1][1]
-        for mid in mids:
-            standard_prediction[mid] = recipients
+        if(mids):  # at least one mid for sender
+            recipients = predictions[1][0]
+            for mid in mids:
+                standard_prediction[mid] = recipients
     return standard_prediction
 
 
@@ -99,7 +100,7 @@ def get_recency_address_books(emails_ids_per_sender, email_df, beta):
     return address_books
 
 
-def predictions_from_addressbook(test_dic, address_books, k=10):
+def predictions_from_addressbook(test_dic, address_books, keep_all=False, k=10):
     """
     Writes results to csv file for kaggle submission
     for text-independent models (frequency, recency)
@@ -112,8 +113,11 @@ def predictions_from_addressbook(test_dic, address_books, k=10):
     predictions_per_sender = {}
     for sender, mids_predict in test_dic.items():
         recency_preds = []
-        # select k most frequent recipients for the user
-        k_most = [elt[0] for elt in address_books[sender][:k]]
+        if(keep_all):
+            k_most = [elt[0] for elt in address_books[sender]]
+        else:
+            # select k most frequent recipients for the user
+            k_most = [elt[0] for elt in address_books[sender][:k]]
         for id_predict in mids_predict:
             # for recency baselines, the predictions are always the same
             recency_preds.append(k_most)

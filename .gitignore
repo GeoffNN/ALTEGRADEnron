@@ -12,4 +12,5 @@ results/*
 
 models/*
 ranks_val/*
+ranks_test/*
 data/*
