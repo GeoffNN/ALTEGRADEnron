@@ -43,26 +43,26 @@ def get_recipients(email_df, mid):
     return recipients
 
 
-def body_dict_from_panda(dataframe):
+def body_dict_from_panda(df_info):
     """
     Constructs dictionnary of bodies from dataframe with mid as key
     """
     body_dict = {}
-    nb_total = len(dataframe)
+    nb_total = len(df_info)
     print('Constructing dictionnary from dataframe...')
-    for id, row in dataframe.iterrows():
+    for id, row in df_info.iterrows():
         body_dict[row.mid] = row.body
-        if(id % 10000 == 0):
+        if (id % 10000 == 0):
             print('{id} / {nb_total}'.format(id=id, nb_total=nb_total))
     print('done !')
     return body_dict
 
 
-def get_all_senders(email_ids_per_sender):
+def get_all_senders(df):
     """
     Returns all unique sender names
     """
-    return email_ids_per_sender.keys()
+    return df.sender.values
 
 
 def get_all_recipients(address_book):
@@ -71,5 +71,31 @@ def get_all_recipients(address_book):
     with address_books with sender as key and recipients as ranked list
     """
     all_recs = list(
-        set([elt[0] for sublist in address_books.values() for elt in sublist]))
+        set([elt[0] for sublist in address_book.values() for elt in sublist]))
     return all_recs
+
+
+def get_conversation_ids(emails_ids_per_sender, df_info):
+    """
+    :return: dict of dict, with keys: sender then recipient with mids as values
+    """
+    conversation_ids = {}
+
+    for sender, ids in emails_ids_per_sender.items():
+        recs_temp = []
+        for my_id in ids:
+            recipients = df_info[df_info['mid'] == int(my_id)][
+                'recipients'].tolist()
+            recipients = recipients[0].split(' ')
+            # keep only legitimate email addresses
+            recipients = [rec for rec in recipients if '@' in rec]
+            recs_temp.append(recipients)
+            for rec in recipients:
+                if sender in conversation_ids.keys():
+                    if rec in conversation_ids[sender].keys():
+                        conversation_ids[sender][rec].append(my_id)
+                    else:
+                        conversation_ids[sender][rec] = [my_id]
+                else:
+                    conversation_ids[sender] = {rec: [my_id]}
+    return conversation_ids
