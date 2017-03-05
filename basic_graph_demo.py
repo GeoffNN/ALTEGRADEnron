@@ -1,7 +1,7 @@
 import pandas as pd
 
 from src.centroid_recommendation import compute_recommendations
-from src.preprocess import body_dict_from_panda, get_email_ids_per_sender, get_conversation_ids
+from src.preprocess import body_dict_from_panda
 from src.tfidftools import get_tfidf
 
 path_to_data = 'data/'
