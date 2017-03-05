@@ -107,7 +107,7 @@ def predict(recipient, sender, email, data, a=1/3, b=1/3, c=1/3):
         prob *= p_s_r[recipient][sender]
     except KeyError:
         return 0
-    prob = pow(prob, 1/5)
+    prob = np.log(prob)
     # P(E|R, S)
     words = tools.get_tokens(email)
     for word in words:
@@ -125,12 +125,12 @@ def predict(recipient, sender, email, data, a=1/3, b=1/3, c=1/3):
         except KeyError:
             pass
         if temp:
-            prob *= pow(temp, 1/5)
+            prob += np.log(temp)
     return prob
 
 from heapq import heappop, heappush
 
-def compute_results(df, df_info, data, a=1/3, b=1/3, c=1/3):
+def compute_results(df, df_info, data, a=1/3, b=1/3, c=1/3, k=10):
     res = {}
     r_s = data['r_s']
     pbar = (range(len(df)))
@@ -144,11 +144,11 @@ def compute_results(df, df_info, data, a=1/3, b=1/3, c=1/3):
             # only keep top < 10 receivers
             recipient_candidates = r_s[sender]
             n = len(recipient_candidates)
-            for recipient in recipient_candidates[:min(n, 10)]:
+            for recipient in recipient_candidates[:min(n, k)]:
                 prob = predict(recipient, sender, email, data, a, b, c) 
                 heappush(heap, (prob, recipient))
-            if n > 10:
-                for recipient in recipient_candidates[10:]:
+            if n > k:
+                for recipient in recipient_candidates[k:]:
                     prob = predict(recipient, sender, email, data, a, b, c) 
                     heappush(heap, (prob, recipient))                     
                     heappop(heap)
