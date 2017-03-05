@@ -103,7 +103,7 @@ def compute_recency_prediction_mad(recency_predictions, val_info):
     return score
 
 
-def get_train_val(training, training_info, train_frac=.5, disp=True):
+def get_train_val(training, training_info, train_frac=0.95, disp=True):
     """
     Creates cross-validation structures
     The train-val sets are split chronologically

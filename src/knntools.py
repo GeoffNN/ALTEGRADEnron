@@ -57,12 +57,17 @@ def find_similar(vector, tfidf_matrix, nb_similars=100):
     return indexes_similarities
 
 
-def similar_dic_to_standard(indexes_similarities, nb_recipients=10):
+def similar_dic_to_standard(indexes_similarities,
+                            keep_all=False, nb_recipients=10):
     knn_dic = {}
     for mid in indexes_similarities:
         receiver_scores = indexes_similarities[mid]
         sorted_cos_sim = sorted(receiver_scores.items(),
                                 key=operator.itemgetter(1), reverse=True)
-        k_most = [elt[0] for elt in sorted_cos_sim[:nb_recipients]]
+        if (keep_all):
+            k_most = [elt[0] for elt in sorted_cos_sim]
+        else:
+            k_most = [elt[0] for elt in sorted_cos_sim[:nb_recipients]]
+
         knn_dic[mid] = k_most
     return knn_dic
