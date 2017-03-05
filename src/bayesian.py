@@ -1,5 +1,5 @@
 import numpy as np
-import src.tools as tools
+import src.tfidftools as tools
 try: from tqdm import tqdm
 except ImportError: tqdm = lambda x:x
 
@@ -107,6 +107,7 @@ def predict(recipient, sender, email, data, a=1/3, b=1/3, c=1/3):
         prob *= p_s_r[recipient][sender]
     except KeyError:
         return 0
+    prob = pow(prob, 1/5)
     # P(E|R, S)
     words = tools.get_tokens(email)
     for word in words:
@@ -122,8 +123,9 @@ def predict(recipient, sender, email, data, a=1/3, b=1/3, c=1/3):
         try:
             temp += c * p_w[word]
         except KeyError:
-            pass       
-        prob *= temp
+            pass
+        if temp:
+            prob *= pow(temp, 1/5)
     return prob
 
 from heapq import heappop, heappush
@@ -150,5 +152,8 @@ def compute_results(df, df_info, data, a=1/3, b=1/3, c=1/3):
                     prob = predict(recipient, sender, email, data, a, b, c) 
                     heappush(heap, (prob, recipient))                     
                     heappop(heap)
-            res[mid] = heap[::-1] #first element has higher prob
+                res_tmp = []
+            while heap:
+                res_tmp = [heappop(heap)] + res_tmp
+            res[mid] = res_tmp
     return res
