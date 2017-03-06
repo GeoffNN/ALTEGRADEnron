@@ -48,7 +48,7 @@ def reciprocal_rerank(models, ranking_constant,
     return fusion_dic
 
 
-def keep_only_max_recips(dic_ranks, max_recips):
+def keep_only_max_recips(dic_ranks, max_recips=10):
     """
     Keeps only top @max_recips for each mid in dic_ranks
     Input and output dic in same format : {mid:[sender1, sender2, ...], }
