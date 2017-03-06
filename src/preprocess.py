@@ -52,10 +52,9 @@ def body_dict_from_panda(dataframe):
     body_dict = {}
     nb_total = len(dataframe)
     print('Constructing dictionnary from dataframe...')
-    for id, row in dataframe.iterrows():
+    pbar_rows = tqdm_notebook(dataframe.iterrows())
+    for id, row in pbar_rows:
         body_dict[row.mid] = row.body
-        if(id % 10000 == 0):
-            print('{id} / {nb_total}'.format(id=id, nb_total=nb_total))
     print('done !')
     return body_dict
 
