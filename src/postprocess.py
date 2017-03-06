@@ -14,7 +14,7 @@ def write_results_ranked(predictions_per_mid,
                                     ' '.join(my_preds) + '\n', 'UTF-8'))
 
 
-def write_results_ranked(predictions_per_sender,
+def write_results_ranked(predictions_per_mid,
                          path_to_results, results_name):
     """
     Writes results to csv file for kaggle submission
@@ -22,7 +22,7 @@ def write_results_ranked(predictions_per_sender,
     """
     with open(path_to_results + results_name, 'wb') as my_file:
         my_file.write(bytes('mid,recipients\n', 'UTF-8'))
-        for mid, preds in predictions_per_sender.items():
+        for mid, preds in predictions_per_mid.items():
             my_file.write(bytes(str(mid) + ',' +
                                 ' '.join(preds) + '\n', 'UTF-8'))
 
