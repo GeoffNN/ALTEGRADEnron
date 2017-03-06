@@ -42,6 +42,7 @@ def get_restricted_email_ids_per_sender(email_df, mids):
 def get_recipients(email_df, mid):
     recipients = email_df[email_df['mid'] == int(mid)]['recipients'].tolist()
     recipients = recipients[0].split(' ')
+    recipients = [rec for rec in recipients if '@' in rec]
     return recipients
 
 
