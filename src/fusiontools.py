@@ -3,9 +3,15 @@ import math
 import operator
 
 
-def reciprocal_rank_score(rank, constant):
-    return 1 / (constant + rank)
-    # return math.exp(-rank / constant)
+def reciprocal_rank_score(rank, constant, ranking='linear'):
+    if (ranking == 'linear'):
+        score = 1 / (constant + rank)
+    elif(ranking == 'exponential'):
+        score = math.exp(-rank / constant)
+    else:
+        raise ValueError("Didn't receive 'linear' \
+                         or 'exponential' as ranking param")
+    return score
 
 
 def reciprocal_rerank(models, ranking_constant,
@@ -40,3 +46,15 @@ def reciprocal_rerank(models, ranking_constant,
         # Keep only top predictions
         fusion_dic[mid] = reranked_recipients[:nb_recipients]
     return fusion_dic
+
+
+def keep_only_max_recips(dic_ranks, max_recips):
+    """
+    Keeps only top @max_recips for each mid in dic_ranks
+    Input and output dic in same format : {mid:[sender1, sender2, ...], }
+    Also converts mid key from str to int if needed !
+    """
+    cropped_recips = {}
+    for mid, recipients in dic_ranks.items():
+        cropped_recips[int(mid)] = recipients[:max_recips]
+    return cropped_recips
