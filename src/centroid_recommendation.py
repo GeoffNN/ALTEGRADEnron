@@ -17,18 +17,16 @@ def compute_recommendations(n_recipients, training, training_info, test, test_in
     for sender in senders:
         k += 1
         if k % 10 == 0:
-            print("{} of {} senders computed".format(k, len(senders)))
-        print("Computing neighbor centroids for {}".format(sender))
+            print("{}/{} senders computed - {}%".format(k, len(senders), k/len(senders)))
         centroids = get_recipient_centroids(sender, conversation_ids, training_info, tfidf)
         mids_to_process = test_ids_per_sender[sender]
         print("Processing {} emails for {}".format(len(mids_to_process), sender))
 
         j = 0
         for mid in mids_to_process:
-            print(mid)
             recommendations[mid] = recommend_for_mid(n_recipients, mid, centroids, test_info, tfidf)
             if j % 5 == 0:
-                print("{}/{} emails processed".format(j, len(mids_to_process)))
+                print("{}/{} emails processed - {}%".format(j, len(mids_to_process), j/len(mids_to_process)))
             j += 1
 
     return recommendations
@@ -67,8 +65,7 @@ def centroid(mail_feats_array):
 
 # TODO: use time diff in similarity computation
 def similarity(f_mail1, f_mail2):
-    sim = float(f_mail1.dot(f_mail2.T) / (sparse_norm(f_mail1) * sparse_norm(f_mail2)))
-    return sim
+    return float(f_mail1.dot(f_mail2.T) / (sparse_norm(f_mail1) * sparse_norm(f_mail2)))
 
 
 def decay(time_diff, gamma=1):

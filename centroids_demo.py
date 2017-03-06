@@ -35,3 +35,6 @@ print("Fitted.")
 
 print("Computing recommendations...")
 recommendations = compute_recommendations(n_recipients, training, training_info, test, test_info, tfidf)
+print("Recommendations computed.")
+print("Saving to file...")
+print("All set!")
