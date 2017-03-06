@@ -1,3 +1,9 @@
+try:
+    from tqdm import tqdm_notebook
+except ImportError:
+    tqdm_notebook = lambda x: x
+
+
 def get_email_ids_per_sender(email_df):
     """
     returns dictionnary with email address as key and mid list as value
@@ -20,8 +26,9 @@ def get_restricted_email_ids_per_sender(email_df, mids):
     emails_ids_per_sender = {}
     mids = [int(mid) for mid in mids]
     mids = list(mids)
-    sender_counter = 0
-    for index, series in email_df.iterrows():
+
+    row_pbar = tqdm_notebook(email_df.iterrows())
+    for index, series in row_pbar:
         row = series.tolist()
         sender = row[0]
         ids = row[1:][0].split(' ')
@@ -29,11 +36,6 @@ def get_restricted_email_ids_per_sender(email_df, mids):
         ids = [mid for mid in ids if mid in mids]
         emails_ids_per_sender[sender] = ids
 
-        # Display advancement
-        if(sender_counter % 20 == 0):
-            print('processed {sender_nb} senders'.format(
-                sender_nb=sender_counter))
-        sender_counter += 1
     return emails_ids_per_sender
 
 
