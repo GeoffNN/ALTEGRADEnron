@@ -13,11 +13,11 @@ def add_time_rank_to_dataframe(df):
     df.loc[correct_prefix, 'date'] = min_date_string
 
     # Convert dates to timestamps
-    df['parsed_date'] = pd.to_datetime(df['date'], yearfirst=True)
+    df['date'] = pd.to_datetime(df['date'], yearfirst=True)
 
     # Add time rank column and sort dataframe
-    df['time_rank'] = df['parsed_date'].rank(ascending=False)
-    df = df.sort_values('parsed_date')
+    df['time_rank'] = df['date'].rank(ascending=False)
+    df = df.sort_values('date')
     return df
 
 
