@@ -56,5 +56,5 @@ def keep_only_max_recips(dic_ranks, max_recips=10):
     """
     cropped_recips = {}
     for mid, recipients in dic_ranks.items():
-        cropped_recips[int(mid)] = recipients[:max_recips]
+        cropped_recips[int(mid)] = list(recipients[:max_recips])
     return cropped_recips
