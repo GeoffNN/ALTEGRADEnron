@@ -3,6 +3,7 @@ import numpy as np
 
 import src.tools as tools
 import src.preprocess as preprocess
+import src.recencytools as recency
 
 
 def compute_prediction_mad(prediction_dic, val_info):
@@ -105,11 +106,17 @@ def compute_recency_prediction_mad(recency_predictions, val_info):
 def get_train_val(training, training_info, train_frac=0.95, disp=True):
     """
     Creates cross-validation structures
+    The train-val sets are split chronologically
+    to respect the train-test setting
     @return train_info : train_info data frame (same format as training_info)
     @return val_info
     @return train_email_ids_per_sender {sender: [mid1, mid2, ...]}
     @return val_email_ids_per_sender
     """
+    # Sort the training mails chronologically
+    training_info = recency.add_time_rank_to_dataframe(training_info)
+
+    # Compute training and validation email numbers
     n_samples = len(training_info)
     n_train = int(train_frac * n_samples)
     n_test = n_samples - n_train

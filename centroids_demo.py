@@ -5,6 +5,7 @@ from src.postprocess import write_results_ranked
 from src.preprocess import body_dict_from_panda, get_email_ids_per_sender, get_conversation_ids, get_all_senders
 from src.scoring import get_train_val, compute_prediction_mad
 from src.tfidftools import get_tfidf
+import pickle as pkl
 
 path_to_data = 'data/'
 path_to_results = 'results/'
@@ -45,22 +46,27 @@ print("Computing recommendations for train/val...")
 
 conversation_ids_val = get_conversation_ids(train_ids_per_sender_val, training_info)
 senders = get_all_senders(training)
-recommendations_val = compute_recommendations(n_recipients, senders, training_info, conversation_ids_val, val_info,
-                                              val_ids_per_sender,
-                                              tfidf)
+recommendations_val = compute_recommendations(n_recipients, senders, train_info, conversation_ids_val, val_info,
+                                              val_ids_per_sender, tfidf)
 print("Done!")
 
 print("Computing recommendations for train/test...")
+
+n_recipients = 10
+
 train_ids_per_sender = get_email_ids_per_sender(training)
 conversation_ids = get_conversation_ids(train_ids_per_sender, training_info)
 test_ids_per_sender = get_email_ids_per_sender(test)
+
 recommendations_test = compute_recommendations(n_recipients, senders, training_info, conversation_ids, test_info,
-                                               test_ids_per_sender,
-                                               tfidf)
+                                               test_ids_per_sender, tfidf)
 print("Done!")
 print("Computing score on validation set...")
 print("Score: {}".format(compute_prediction_mad(recommendations_val, val_info)))
 
 print("Writing file...")
-write_results_ranked(recommendations_val, path_to_results, "centroids_validation")
-write_results_ranked(recommendations_test, path_to_results, "centroids_test")
+write_results_ranked(recommendations_val, path_to_results, "centroids_validation.csv")
+write_results_ranked(recommendations_test, path_to_results, "centroids_test.csv")
+
+with open(path_to_results + 'centroids_dict.p', 'wb') as f:
+    pkl.dump(recommendations_val, f)
