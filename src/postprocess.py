@@ -1,5 +1,5 @@
-def write_results_ranked(predictions_per_mid,
-                         path_to_results, results_name):
+def write_recency_results(predictions_per_mid,
+                          path_to_results, results_name):
     """
     Writes results to csv file for kaggle submission
     result must be a dict {sender:[[mids,[senders, senders, ...]]}
