@@ -2,6 +2,7 @@ from collections import Counter, defaultdict
 import operator
 import math
 import pandas as pd
+from tqdm import tqdm_notebook
 
 
 def add_time_rank_to_dataframe(df):
@@ -40,7 +41,8 @@ def get_frequency_address_books(emails_ids_per_sender, email_df):
     address_books = {}
     idx_sender = 0
 
-    for sender, ids in emails_ids_per_sender.items():
+    pbar_senders = tqdm_notebook(emails_ids_per_sender.items())
+    for sender, ids in pbar_senders:
         recs_temp = []
         for my_id in ids:
             recipients = email_df[email_df['mid'] == int(my_id)][
@@ -65,20 +67,35 @@ def get_frequency_address_books(emails_ids_per_sender, email_df):
     return address_books
 
 
-def get_recency_address_books(emails_ids_per_sender, email_df, beta):
+def get_recency_address_books(emails_ids_per_sender, email_df,
+                              beta, use_rank=False):
     """
     Create address book with recency information for each user
     @return address_books with sender as key and recipients as ranked list
     """
     address_books = {}
-    idx_sender = 0
-    email_ranks_dic = get_email_ranks(email_df)
-    for sender, ids in emails_ids_per_sender.items():
+
+    # get time ranks if @use_rank, else get datetimes
+    if(use_rank):
+        email_recency_rank_dic = get_recency_rank_dic(email_df)
+    else:
+        email_recency_datetime_dic = get_rencency_datetime_dic(email_df)
+        latest_email_date = email_df.parsed_date.max()
+
+    pbar_senders = tqdm_notebook(emails_ids_per_sender.items())
+    for sender, ids in pbar_senders:
         recipients_scores = defaultdict(lambda: 0)
         for my_id in ids:
             my_id = int(my_id)
-            recency_score = get_email_recency_score(
-                email_ranks_dic, my_id, beta)
+            if(use_rank):
+                # Compute rank scores
+                recency_score = get_email_recency_rank_score(
+                    email_recency_rank_dic, my_id, beta)
+            else:
+                # Compute datetime scores
+                recency_score = get_email_recency_time_score(
+                    email_recency_datetime_dic, my_id, beta, latest_email_date)
+
             recipients = email_df[email_df['mid'] == int(my_id)][
                 'recipients'].tolist()
             recipients = recipients[0].split(' ')
@@ -94,13 +111,11 @@ def get_recency_address_books(emails_ids_per_sender, email_df, beta):
         # save
         address_books[sender] = sorted_rec_occ
 
-        if idx_sender % 10 == 0:
-            print('processed {nb_sender} senders'.format(nb_sender=idx_sender))
-        idx_sender += 1
     return address_books
 
 
-def predictions_from_addressbook(test_dic, address_books, keep_all=False, k=10):
+def predictions_from_addressbook(test_dic, address_books,
+                                 keep_all=False, k=10):
     """
     Writes results to csv file for kaggle submission
     for text-independent models (frequency, recency)
@@ -125,25 +140,34 @@ def predictions_from_addressbook(test_dic, address_books, keep_all=False, k=10):
     return predictions_per_sender
 
 
-def get_email_ranks(email_df):
+def get_recency_rank_dic(email_df):
     """
     Creates dictionnary that links mid to time rank
     (1 for most recent mail)
     """
-    return dict(zip(email_df['mid'], email_df['time_rank']))
+    recency_dic = dict(zip(email_df['mid'], email_df['time_rank']))
+    return recency_dic
 
 
-def get_email_rank(mid_rank_dic, mid):
-    """
-    Retrieve email rank for given mid
-    """
-    return mid_rank_dic[mid]
+def get_rencency_datetime_dic(email_df):
+    recency_dic = dict(zip(email_df['mid'], email_df['parsed_date']))
+    return recency_dic
 
 
-def get_email_recency_score(mid_rank_dic, mid, beta):
+def get_email_recency_rank_score(mid_rank_dic, mid, beta):
     """
     Compute the recency score for a given mid
     """
-    mid_rank = get_email_rank(mid_rank_dic, mid)
+    mid_rank = mid_rank_dic[mid]
     recency_score = math.exp(- mid_rank / beta)
+    return recency_score
+
+
+def get_email_recency_time_score(mid_datetime_dic, mid, beta, last_email_date):
+    """
+    Compute the recency score for a given mid
+    """
+    mid_date_time = mid_datetime_dic[mid]
+    recency_score = math.pow(0.5, (last_email_date - mid_date_time
+                                   ).total_seconds() / beta)
     return recency_score
