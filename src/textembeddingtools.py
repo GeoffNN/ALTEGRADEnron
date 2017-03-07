@@ -4,12 +4,59 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import os
 import pickle
+import re
 import string
 from tqdm import tqdm_notebook
 
+import src.preprocess as preprocess
 
-def get_token_dict(token_dict_path, body_dict):
-    if (os.path.exists(token_dict_path)):
+
+def compute_similarity_scores(model, index_similarities, hdp_dic,
+                              idx_to_mids, training_info,
+                              test_info, nb_similars=100):
+
+    mid_recipient_scores = {}
+
+    body_dict = preprocess.body_dict_from_panda(test_info)
+
+    pbar_test_bodies = tqdm_notebook(body_dict.items())
+    for test_mid, test_body in pbar_test_bodies:
+        best_mids, best_scores = get_k_similars(model, index_similarities,
+                                                hdp_dic, idx_to_mids,
+                                                test_body, k=nb_similars)
+
+        # Get corresponding similarity scores
+        test_mail_scores = defaultdict(lambda: 0)
+        for train_mid, train_score in zip(best_mids, best_scores):
+            recipients = preprocess.get_recipients(training_info, train_mid)
+            for recipient in recipients:
+                test_mail_scores[recipient] += train_score
+        mid_recipient_scores[test_mid] = test_mail_scores
+    return mid_recipient_scores
+
+
+def get_k_similars(model, index_similarities, dictionary,
+                   idx_to_mids, email_body, k=100):
+    """
+    Gets similar indexes for @email_body as a string
+    @model and @index_similarities as returned by compute_hdp_model
+    @dictionnary as returned by gensim.corpora.Dictionary
+    @idx_to_mids {mid_1:idx_1, ...}
+    where idx is the corresponding index in index_similarities
+    """
+    email_tokens = tokenize_body(email_body)
+    vec_bow = dictionary.doc2bow(email_tokens)
+    query_vec = model[vec_bow]
+    similars = index_similarities[query_vec]
+    sorted_similars = sorted(enumerate(similars), key=lambda item: -item[1])
+    sorted_similars = sorted_similars[:k]
+    mids = [idx_to_mids[sim[0]] for sim in sorted_similars]
+    scores = [sim[1] for sim in sorted_similars]
+    return mids, scores
+
+
+def get_token_dict(token_dict_path, body_dict, overwrite=False, save=True):
+    if (os.path.exists(token_dict_path) and not overwrite):
         with open(token_dict_path, 'rb') as infile:
             token_dict = pickle.load(infile)
     else:
@@ -21,12 +68,16 @@ def get_token_dict(token_dict_path, body_dict):
             token_dict[mid] = tokenize_body(body)
 
         # Save for future use
-        with open(token_dict_path, 'wb') as outfile:
-            pickle.dump(token_dict, outfile)
+        if(save):
+            with open(token_dict_path, 'wb') as outfile:
+                pickle.dump(token_dict, outfile)
     return token_dict
 
 
-def tokenize_body(body):
+def tokenize_body(body, remove_punctuation=True):
+    if(remove_punctuation):
+        # Replace punctuation with spaces
+        body = re.sub(r'[^\w\s]', ' ', body)
     punctuation_list = list(string.punctuation)
     stop_list = stopwords.words('english') + punctuation_list
 
@@ -85,23 +136,3 @@ def remove_rare_words(email_corpus, threshold_count=1):
     email_corpus = [[token for token in text if frequency[token] > threshold_count]
                     for text in email_corpus]
     return email_corpus
-
-
-def get_k_similars(model, index_similarities, dictionary,
-                   idx_to_mids, email_body, k=100):
-    """
-    Gets similar indexes for @email_body as a string
-    @model and @index_similarities as returned by compute_hdp_model
-    @dictionnary as returned by gensim.corpora.Dictionary
-    @idx_to_mids {mid_1:idx_1, ...}
-    where idx is the corresponding index in index_similarities
-    """
-    email_tokens = tokenize_body(email_body)
-    vec_bow = dictionary.doc2bow(email_tokens)
-    query_vec = model[vec_bow]
-    similars = index_similarities[query_vec]
-    sorted_similars = sorted(enumerate(similars), key=lambda item: -item[1])
-    sorted_similars = sorted_similars[:k]
-    mids = [idx_to_mids[sim[0]] for sim in sorted_similars]
-    scores = [sim[1] for sim in sorted_similars]
-    return mids, scores
