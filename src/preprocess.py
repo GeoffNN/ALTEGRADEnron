@@ -99,3 +99,14 @@ def get_conversation_ids(emails_ids_per_sender, df_info):
                 else:
                     conversation_ids[sender] = {rec: [my_id]}
     return conversation_ids
+
+
+def get_all_recipients_from_df(train_df_info):
+    all_recipients = []
+    pbar_rows = tqdm_notebook(train_df_info.iterrows())
+    for index, row in pbar_rows:
+        recipients = row['recipients'].split(' ')
+        recipients = [rec for rec in recipients if '@' in rec]
+        all_recipients = recipients + all_recipients
+    all_recipients = list(set(all_recipients))
+    return all_recipients
