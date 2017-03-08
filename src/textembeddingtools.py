@@ -41,7 +41,7 @@ def get_k_similars(model, index_similarities, dictionary,
     Gets similar indexes for @email_body as a string
     @model and @index_similarities as returned by compute_hdp_model
     @dictionnary as returned by gensim.corpora.Dictionary
-    @idx_to_mids {mid_1:idx_1, ...}
+    @idx_to_mids {mid_1:idx_1, ...} for the mids that match index_similarities
     where idx is the corresponding index in index_similarities
     """
     email_tokens = tokenize_body(email_body)
@@ -55,7 +55,8 @@ def get_k_similars(model, index_similarities, dictionary,
     return mids, scores
 
 
-def get_token_dict(token_dict_path, body_dict, overwrite=False, save=True):
+def get_token_dict(token_dict_path, body_dict,
+                   overwrite=False, save=True, disp_adv=True):
     if (os.path.exists(token_dict_path) and not overwrite):
         with open(token_dict_path, 'rb') as infile:
             token_dict = pickle.load(infile)
@@ -63,8 +64,13 @@ def get_token_dict(token_dict_path, body_dict, overwrite=False, save=True):
         # Compute token_dict
 
         token_dict = {}
-        pbar_token_dict = tqdm_notebook(body_dict.items())
-        for mid, body in pbar_token_dict:
+
+        if(disp_adv):
+            row_pbar = tqdm_notebook(body_dict.items())
+        else:
+            row_pbar = body_dict.items()
+
+        for mid, body in row_pbar:
             token_dict[mid] = tokenize_body(body)
 
         # Save for future use
@@ -107,8 +113,10 @@ def compute_hdp_model(email_corpus, word_id_dic,
         # Compute model and index for similarities
         print('this will take some time...')
         model = models.HdpModel(email_corpus, id2word=word_id_dic)
-        print('computed hdp model')
-        index_similarities = similarities.MatrixSimilarity(model[email_corpus])
+        # model = models.LdaModel(email_corpus, id2word=word_id_dic, num_topics=200, passes=10)
+        print('computed model')
+        index_similarities = similarities.MatrixSimilarity(model[email_corpus],
+                                                           num_features=500)
         print('computed similarity index')
 
         # Save to files to save time next time
