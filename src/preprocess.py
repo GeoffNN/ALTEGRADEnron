@@ -48,18 +48,20 @@ def get_recipients(email_df, mid):
     return recipients
 
 
-def body_dict_from_panda(df_info):
+def body_dict_from_panda(df_info, disp_adv=True):
     """
     Constructs dictionnary of bodies from dataframe with mid as key
     """
     body_dict = {}
     nb_total = len(df_info)
-    print('Constructing dictionnary from dataframe...')
-    for id, row in df_info.iterrows():
+    # print('Constructing dictionnary from dataframe...')
+
+    if(disp_adv):
+        row_pbar = tqdm_notebook(df_info.iterrows())
+    else:
+        row_pbar = df_info.iterrows()
+    for id, row in row_pbar:
         body_dict[row.mid] = row.body
-        if (id % 10000 == 0):
-            print('{id} / {nb_total}'.format(id=id, nb_total=nb_total))
-    print('done !')
     return body_dict
 
 
