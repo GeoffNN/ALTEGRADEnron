@@ -121,3 +121,11 @@ def get_all_recipients_from_df(train_df_info):
         all_recipients = recipients + all_recipients
     all_recipients = list(set(all_recipients))
     return all_recipients
+
+
+def get_mid_sender_dict(emails_ids_per_sender):
+    mid_sender_dic = {}
+    for sender, mids in emails_ids_per_sender.items():
+        for mid in mids:
+            mid_sender_dic[mid] = sender
+    return mid_sender_dic
