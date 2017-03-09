@@ -6,8 +6,11 @@ try:
 except ImportError:
     tqdm_notebook = lambda x: x
 
-import src.tfidftools as tfidftools
+import src.graphwordstools as graphtools
 import src.preprocess as preprocess
+import src.tfidftools as tfidftools
+import src.textembeddingtools as texttools
+from src.tools import timeit
 
 
 def compute_similarity_scores(tfidf_model, tfidf_matrix,
@@ -34,6 +37,40 @@ def compute_similarity_scores(tfidf_model, tfidf_matrix,
 
         # Get mid in training set corresponding to best matches
         best_match_mid = [tfidf_mids[similar_item[0]]
+                          for similar_item in similars]
+
+        # Get corresponding similarity scores
+        best_match_scores = [similar_item[1] for similar_item in similars]
+        test_mail_scores = defaultdict(lambda: 0)
+        for train_mid, train_score in zip(best_match_mid, best_match_scores):
+            recipients = preprocess.get_recipients(training_info, train_mid)
+            for recipient in recipients:
+                test_mail_scores[recipient] += train_score
+        mid_recipient_scores[test_mid] = test_mail_scores
+    return mid_recipient_scores
+
+
+def compute_twidf_similarity_scores(twidf_matrix, twidf_mids, test_vectors,
+                                    training_info, nb_similars=100):
+    """
+    Computes similarity scores for mails in @test_info dataframe
+
+    @params twidf_matrix, twidf_mids
+    as returned by graphtools.get_tw_idf_matrix
+
+    @return mid_recipient_scores
+    dic {mid:{recipient:sum_of_si,ilarities, ...}, ...}
+    """
+    test_mids = list(test_vectors.keys())
+    mid_recipient_scores = {}
+
+    test_vectors_pbar = tqdm_notebook(test_vectors.items())
+    for test_mid, query_vector in test_vectors_pbar:
+        similars = find_similar(query_vector, twidf_matrix,
+                                nb_similars=nb_similars)
+
+        # Get mid in training set corresponding to best matches
+        best_match_mid = [twidf_mids[similar_item[0]]
                           for similar_item in similars]
 
         # Get corresponding similarity scores
