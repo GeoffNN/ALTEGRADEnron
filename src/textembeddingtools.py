@@ -2,6 +2,7 @@ from collections import defaultdict
 from gensim import corpora, models, similarities
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 import os
 import pickle
 import re
@@ -55,9 +56,9 @@ def get_k_similars(model, index_similarities, dictionary,
     return mids, scores
 
 
-def get_token_dict(token_dict_path, body_dict,
-                   overwrite=False, save=True, disp_adv=True):
-    if (os.path.exists(token_dict_path) and not overwrite):
+def get_token_dict(body_dict, save=False, use_saved=False,
+                   token_dict_path='', disp_adv=True):
+    if (os.path.exists(token_dict_path) and use_saved):
         with open(token_dict_path, 'rb') as infile:
             token_dict = pickle.load(infile)
     else:
@@ -80,15 +81,29 @@ def get_token_dict(token_dict_path, body_dict,
     return token_dict
 
 
-def tokenize_body(body, remove_punctuation=True):
+def tokenize_body(body, remove_punctuation=True, stemming=False):
+    # Initial string preprocessing
+    body = body.lower()
+    # Remove special characters
+    body = body.strip().encode('ascii', 'ignore').decode('ascii')
     if(remove_punctuation):
-        # Replace punctuation with spaces
-        body = re.sub(r'[^\w\s]', ' ', body)
-    punctuation_list = list(string.punctuation)
-    stop_list = stopwords.words('english') + punctuation_list
+        # Replace punctuation except '-' with spaces
+        body = re.sub(r'[.,\/#!$%\^&\*;:{}=\_`~()]', ' ', body)
+
+    # punct = string.punctuation.replace('-', '')
+    # punctuation_list = list(punct)
+    stop_list = stopwords.words('english')
 
     tokens = [symbol for symbol in word_tokenize(
-        body.lower()) if symbol not in stop_list]
+        body) if symbol not in stop_list]
+    if(stemming):
+        stemmer = PorterStemmer()
+        # apply Porter's stemmer
+        tokens_stemmed = list()
+        for token in tokens:
+            tokens_stemmed.append(stemmer.stem(token))
+        tokens = tokens_stemmed
+
     return tokens
 
 
@@ -144,3 +159,13 @@ def remove_rare_words(email_corpus, threshold_count=1):
     email_corpus = [[token for token in text if frequency[token] > threshold_count]
                     for text in email_corpus]
     return email_corpus
+
+
+def get_doc_length_info(token_dict):
+    doc_lengths_dic = {}
+    # Store email token lengths
+    for mid, tokens in token_dict.items():
+        doc_lengths_dic[mid] = len(tokens)
+    # Compute mean doc length
+    average_doc_len = sum(doc_lengths_dic.values()) / len(doc_lengths_dic)
+    return doc_lengths_dic, average_doc_len

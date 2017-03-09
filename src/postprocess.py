@@ -9,7 +9,7 @@ def write_recency_results(predictions_per_mid,
         for sender, preds in predictions_per_mid.items():
             ids = preds[0]
             freq_preds = preds[1]
-            for index, my_preds in enumerate(freq_preds):
+            for index, my_preds in enumerate(freq_preds[:10]):
                 my_file.write(bytes(str(ids[index]) + ',' +
                                     ' '.join(my_preds) + '\n', 'UTF-8'))
 
@@ -24,7 +24,7 @@ def write_results_ranked(predictions_per_mid,
         my_file.write(bytes('mid,recipients\n', 'UTF-8'))
         for mid, preds in predictions_per_mid.items():
             my_file.write(bytes(str(mid) + ',' +
-                                ' '.join(preds) + '\n', 'UTF-8'))
+                                ' '.join(preds[:10]) + '\n', 'UTF-8'))
 
 
 def write_results_probas(results, path_to_results, results_name):
