@@ -3,6 +3,9 @@ try:
 except ImportError:
     tqdm_notebook = lambda x: x
 
+import scipy
+from sklearn.preprocessing import MultiLabelBinarizer
+
 
 def get_email_ids_per_sender(email_df):
     """
@@ -121,3 +124,88 @@ def get_all_recipients_from_df(train_df_info):
         all_recipients = recipients + all_recipients
     all_recipients = list(set(all_recipients))
     return all_recipients
+
+
+def get_mid_sender_dict(emails_ids_per_sender):
+    mid_sender_dic = {}
+    for sender, mids in emails_ids_per_sender.items():
+        for mid in mids:
+            mid_sender_dic[mid] = sender
+    return mid_sender_dic
+
+
+def get_sparse_sender_info(idx_to_mids, sender_idx_dic,
+                           emails_ids_per_sender, df_info):
+    """
+    gets sender info as one-hot encoding in sparse matrix
+    idx matching mids as in @idx_to_mids in rows and days in columns
+    @sender_idx_dic should be the same dic for training and testing
+    to preserve sender : idx correspondance
+    """
+
+    mid_sender_dic = get_mid_sender_dict(emails_ids_per_sender)
+    nb_samples = len(idx_to_mids)
+    nb_senders = len(sender_idx_dic)
+    sender_features = scipy.sparse.lil_matrix((nb_samples, nb_senders))
+    for idx, mid in idx_to_mids.items():
+        # Get sender info for given mid
+        sender = mid_sender_dic[mid]
+        sender_idx = sender_idx_dic[sender]
+        # Store as one hot encoding
+        sender_features[idx, sender_idx] = 1
+    return sender_features
+
+
+def get_sender_idx_dics(email_ids_per_sender):
+    senders = email_ids_per_sender.keys()
+    sender_idx_dic = {}
+    for idx, sender in enumerate(senders):
+        sender_idx_dic[sender] = idx
+    return sender_idx_dic
+
+
+def get_ordered_recipients(email_info, idx_to_mids):
+    nb_mids = len(idx_to_mids)
+    recipients = [[]] * nb_mids
+    pbar_mids = tqdm_notebook(idx_to_mids.items())
+    for idx, mid in pbar_mids:
+        mid_recipients = get_recipients(email_info, mid)
+        recipients[idx] = mid_recipients
+    return recipients
+
+
+def get_ordered_recipients(email_info, idx_to_mids):
+    nb_mids = len(idx_to_mids)
+    recipients = [[]] * nb_mids
+    pbar_mids = tqdm_notebook(idx_to_mids.items(), leave=False)
+    for idx, mid in pbar_mids:
+        mid_recipients = get_recipients(email_info, mid)
+        recipients[idx] = mid_recipients
+    return recipients
+
+
+def get_one_hot_sender_recipients(sender_idx_to_mids, email_info, disp=True):
+    """
+    @param sender_idx_to_mids : {sender:{0:mid_1, 1:mid_2, ...}, ...}
+    @return sender_recipients_binaries : {sender: binarized_recipients}
+    @return sender_idx_to_recipients : {sender: {0:recipient_1, ...},...}
+    sender_idx_to_recipients codes for the correspondance between
+    recipients and the rows in binarized_recipients
+    """
+
+    sender_recipients_binaries = {}
+    sender_idx_to_recipients = {}
+    if(disp):
+        pbar_senders = tqdm_notebook(sender_idx_to_mids.items())
+    else:
+        pbar_senders = sender_idx_to_mids.items()
+    for sender, idx_to_mids in pbar_senders:
+        ordered_recipients = get_ordered_recipients(email_info, idx_to_mids)
+        binarizer = MultiLabelBinarizer()
+        binarized_recipients = binarizer.fit_transform(ordered_recipients)
+        sender_recipients_binaries[sender] = binarized_recipients
+        all_recipients = binarizer.classes_
+        idx_to_recipients = dict(
+            zip(range(len(all_recipients)), all_recipients))
+        sender_idx_to_recipients[sender] = idx_to_recipients
+    return sender_recipients_binaries, sender_idx_to_recipients

@@ -2,6 +2,7 @@ from collections import Counter, defaultdict
 import operator
 import math
 import pandas as pd
+import scipy
 from tqdm import tqdm_notebook
 
 
@@ -171,3 +172,50 @@ def get_email_recency_time_score(mid_datetime_dic, mid, beta, last_email_date):
     recency_score = math.pow(0.5, (last_email_date - mid_date_time
                                    ).total_seconds() / beta)
     return recency_score
+
+
+def get_sparse_date_info(idx_to_mids, df_info):
+    """
+    gets time info as one-hot encoding in sparse matrix
+    idx matching mids as in @idx_to_mids in rows and days in columns
+    """
+    df_info = add_time_rank_to_dataframe(df_info)
+    nb_samples = len(idx_to_mids)
+    timestamp_dic = get_rencency_datetime_dic(df_info)
+
+    date_features = scipy.sparse.lil_matrix((nb_samples, 7))
+    for idx, mid in idx_to_mids.items():
+        # Get time info for given mid
+        mid_timestamp = timestamp_dic[mid]
+        # mid_hour = mid_timestamp.hour
+        mid_day = mid_timestamp.weekday()
+        date_features[idx, mid_day] = 1
+    return date_features
+
+
+def get_sender_sparse_date_info(email_ids_per_sender,
+                                senders_idx_to_mid_dic,
+                                df_info):
+    """
+    gets time info as one-hot encoding in sparse matrix
+    idx matching mids as in idx_to_mids in rows and days in columns
+    idx_to_mids for each sender is stored in
+    @param senders_mid_features_dic['sender']
+    """
+    # Get time info for all emails
+    df_info = add_time_rank_to_dataframe(df_info)
+    timestamp_dic = get_rencency_datetime_dic(df_info)
+
+    # Create dictionnary {sender: time_feature}
+    date_features_dic = {}
+    for sender, sender_idx_to_mids in senders_idx_to_mid_dic.items():
+        nb_samples = len(sender_idx_to_mids)
+        date_features = scipy.sparse.lil_matrix((nb_samples, 7))
+        for idx, mid in sender_idx_to_mids.items():
+            # Get time info for given mid
+            mid_timestamp = timestamp_dic[mid]
+            # mid_hour = mid_timestamp.hour
+            mid_day = mid_timestamp.weekday()
+            date_features[idx, mid_day] = 1
+        date_features_dic[sender] = date_features
+    return date_features_dic
