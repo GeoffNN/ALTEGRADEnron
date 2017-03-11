@@ -288,7 +288,6 @@ def tree_train_predict(train_stacked_features_dict, train_recipient_binary_dict,
     @param train_sender_idx_to_recipients : {column_idx: recipient, ...}
     """
     predictions = {}
-
     # Prepare sender loop
     if(disp):
         sender_pbar = tqdm_notebook(val_stacked_features_dict.keys())
@@ -330,7 +329,7 @@ def tree_train_predict(train_stacked_features_dict, train_recipient_binary_dict,
                 cropped_indexes = idx_recipient[:positive_probas_nb]
                 recipients = [idx_to_recipients[idx]
                               for idx in cropped_indexes]
-            predictions[mid] = recipients
+                predictions[mid] = recipients
     return predictions
 
 
