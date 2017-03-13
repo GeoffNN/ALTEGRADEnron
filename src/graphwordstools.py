@@ -13,7 +13,7 @@ except ImportError:
 import src.tfidftools as tfidftools
 
 
-def terms_to_graph(terms, window_size=2):
+def terms_to_graph(terms, window_size=4):
     # This function returns a directed weighted igraph
     # from a list of terms (the tokens from the pre-processed text)
     # e.g., ['quick','brown','fox']
@@ -168,7 +168,7 @@ def get_graph_dict(token_dict):
     graph_dict = {}
     pbar_token_dict = tqdm_notebook(token_dict.items())
     for mid, tokens in pbar_token_dict:
-        current_graph = terms_to_graph(tokens, window_size=2)
+        current_graph = terms_to_graph(tokens, window_size=4)
         graph_dict[mid] = current_graph
     return graph_dict
 
@@ -191,7 +191,7 @@ def get_twidf_vectors_from_tokens(idf_dic, idf_words, token_dict,
 def get_twidf_vector_from_tokens(idf_dic, idf_words, tokens_list,
                                  average_doc_len):
     doc_length = len(tokens_list)
-    graph = terms_to_graph(tokens_list)
+    graph = terms_to_graph(tokens_list, window_size=4)
     indegrees = get_term_indegree(graph)
     query_vector = get_twidf_vector_from_indegree(indegrees, idf_dic,
                                                   idf_words,
