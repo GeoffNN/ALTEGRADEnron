@@ -194,6 +194,7 @@ def get_one_hot_sender_recipients(sender_idx_to_mids, email_info, disp=True):
     """
 
     sender_recipients_binaries = {}
+    sender_recipients_non_binary = {}
     sender_idx_to_recipients = {}
     if(disp):
         pbar_senders = tqdm_notebook(sender_idx_to_mids.items())
@@ -204,8 +205,11 @@ def get_one_hot_sender_recipients(sender_idx_to_mids, email_info, disp=True):
         binarizer = MultiLabelBinarizer()
         binarized_recipients = binarizer.fit_transform(ordered_recipients)
         sender_recipients_binaries[sender] = binarized_recipients
+        sender_recipients_non_binary[sender] = ordered_recipients
+
         all_recipients = binarizer.classes_
         idx_to_recipients = dict(
             zip(range(len(all_recipients)), all_recipients))
         sender_idx_to_recipients[sender] = idx_to_recipients
+
     return sender_recipients_binaries, sender_idx_to_recipients

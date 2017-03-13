@@ -69,6 +69,13 @@ def get_keyword_dic(body_dict, keyword, extracted_length=25):
 
 def get_keyword_prediction(train_body_dict, test_body_dict,
                            train_info, keyword, extracted_length=20):
+    """
+    Creates predictions only for emails that do contain @param keyword
+    in the body
+    For those that do, predicts same recipients as the emails with same
+    @param keyword in their body, with order of recipients according to
+    count of recipient presence in those emails
+    """
     test_subject_dic = get_keyword_dic(test_body_dict, keyword=keyword,
                                        extracted_length=extracted_length)
     train_subject_dic = get_keyword_dic(train_body_dict, keyword=keyword,
@@ -86,8 +93,6 @@ def get_keyword_prediction(train_body_dict, test_body_dict,
                 for recipient in recipients:
                     recipient_scores[recipient] += 1
             keyword_prediction_scores[mid] = recipient_scores
-        else:
-            keyword_prediction_scores[mid] = {}
     keyword_predictions = knntools.similar_dic_to_standard(
         keyword_prediction_scores)
     return keyword_predictions

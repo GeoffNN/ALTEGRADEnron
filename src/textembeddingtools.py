@@ -11,6 +11,7 @@ import re
 import string
 from tqdm import tqdm_notebook
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import AdaBoostClassifier
 import src.preprocess as preprocess
 
 
@@ -150,6 +151,8 @@ def get_sender_model_features_from_tokens(email_ids_per_sender,
             sender_token_dict, rarity_threshold=4)
         sender_email_corpus = [word_id_dic.doc2bow(
             text) for text in sender_email_list]
+        # print('corpus')
+        # print(sender_email_corpus)
         sender_model_vectors = model[sender_email_corpus]
         sender_model_matrix = model_vectors_to_matrix_features(
             sender_model_vectors, feature_size)
@@ -207,11 +210,12 @@ def model_vectors_to_matrix_features(model_vectors, nb_topics):
     @return model_features a sparse matrix with topic weights
     in rows for each email
     """
-
     nb_emails = len(model_vectors)
     model_features = scipy.sparse.lil_matrix((nb_emails, nb_topics))
     pbar_model_vectors = tqdm_notebook(enumerate(model_vectors), leave=False)
     for doc_idx, vec in pbar_model_vectors:
+        # print(doc_idx)
+        # print(vec)
         for topic_index, topic_weight in vec:
             model_features[doc_idx, topic_index] = topic_weight
     model_features = scipy.sparse.csr_matrix(model_features)
@@ -281,14 +285,19 @@ def create_stacked_feature_dic(feature_dics):
     return final_feature_dic
 
 
-def tree_train_predict(train_stacked_features_dict, train_recipient_binary_dict,
-                       train_sender_idx_to_recipients, val_stacked_features_dict,
-                       val_senders_idx_to_mid_dic, disp=True, nb_tree=10):
+def tree_train_predict(train_stacked_features_dict,
+                       train_recipient_binary_dict,
+                       train_sender_idx_to_recipients,
+                       val_stacked_features_dict,
+                       val_senders_idx_to_mid_dic,
+                       model='rf',
+                       disp=True, nb_tree=10, min_samples_split=10,
+                       min_samples_leaf=2):
     """
     @param train_sender_idx_to_recipients : {column_idx: recipient, ...}
+    @param model 'rf' for random forest, 'svm' for linear svm
     """
     predictions = {}
-
     # Prepare sender loop
     if(disp):
         sender_pbar = tqdm_notebook(val_stacked_features_dict.keys())
@@ -312,9 +321,16 @@ def tree_train_predict(train_stacked_features_dict, train_recipient_binary_dict,
             # Check that at least one feature present for sender
         if(stacked_val_features.shape[0]):
             # Train classifier and predict
-            rdm_train = RandomForestClassifier(n_estimators=nb_tree)
-            rdm_train.fit(stacked_train_features, binarized_train_predictions)
-            binary_preds = rdm_train.predict_proba(
+            if(model == 'rf'):
+                sklearn_model = RandomForestClassifier(n_estimators=nb_tree,
+                                                       min_samples_split=min_samples_split,
+                                                       min_samples_leaf=min_samples_leaf)
+            else:
+                raise ValueError(
+                    'model {model} is not a recognized sklearn model'.format(model=model))
+            sklearn_model.fit(stacked_train_features,
+                              binarized_train_predictions)
+            binary_preds = sklearn_model.predict_proba(
                 stacked_val_features)
 
             # extract class 1 probas in columns
@@ -330,7 +346,7 @@ def tree_train_predict(train_stacked_features_dict, train_recipient_binary_dict,
                 cropped_indexes = idx_recipient[:positive_probas_nb]
                 recipients = [idx_to_recipients[idx]
                               for idx in cropped_indexes]
-            predictions[mid] = recipients
+                predictions[mid] = recipients
     return predictions
 
 
