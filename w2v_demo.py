@@ -22,6 +22,19 @@ except ImportError:
 # % of most occuring words discarded as stop words
 percentage_threshold = 0
 
+import pandas as pd
+
+from time import time
+
+from src.centroid_recommendation import compute_recommendations
+from src.postprocess import write_results_ranked
+from src.preprocess import body_dict_from_panda, get_email_ids_per_sender, get_conversation_ids, get_all_senders
+from src.scoring import get_train_val, compute_prediction_mad
+import pickle as pkl
+
+from src.tfidftools import get_tokens
+from gensim.models.word2vec import Word2Vec
+
 path_to_data = 'data/'
 path_to_results = 'results/'
 
@@ -30,7 +43,6 @@ n_recipients = 'max'
 ##########################
 # load some of the files #
 ##########################
-
 training = pd.read_csv(path_to_data + 'training_set.csv', sep=',', header=0)
 
 training_info = pd.read_csv(
@@ -101,12 +113,53 @@ else:
         all_embeddings = pkl.load(f)
 
 # Use nearest centroid of average embeddings to compute recipient recommendations
+##########################
+# Compute features #
+##########################
+print("Tokenizing Train...")
+for i, key in enumerate(train_bodies.keys()):
+    train_bodies[key] = get_tokens(clean_string(train_bodies[key]))
+    if i % 1e3 == 0:
+        print(i, 'emails processed')
+
+print("Tokenizing Validation...")
+for i, key in enumerate(val_bodies.keys()):
+    val_bodies[key] = get_tokens(clean_string(val_bodies[key]))
+    if i % 1e3 == 0:
+        print(i, 'emails processed')
+
+print("Tokenizing Test...")
+for i, key in enumerate(test_bodies.keys()):
+    test_bodies[key] = get_tokens(clean_string(test_bodies[key]))
+    if i % 1e3 == 0:
+        print(i, 'emails processed')
+
+# create empty word vectors for the words in vocabulary
+# we set size=300 to match dim of GNews word vectors
+mcount = 5
+vectors = Word2Vec(size=3e2, min_count=mcount)
+# build vocabulary for 'vectors' from the list of lists of tokens with the build_vocab() method
+vectors.build_vocab(body_dict.values())
+
+start = time()
+print("Loading 20 News Group...")
+# we load only the Google word vectors corresponding to our vocabulary
+vectors.intersect_word2vec_format(path_to_data + 'GoogleNews-vectors-negative300.bin.gz', binary=True)
+# normalize the vectors
+vectors.init_sims(replace=True)
+print("word vectors loaded and normalized. Took %s s"%(time()-start))
+
+##########################
+# Proceed to knn on centroids #
+##########################
+
 print("Computing recommendations for train/val...")
 
 conversation_ids_val = get_conversation_ids(train_ids_per_sender_val, training_info)
 senders = get_all_senders(training)
 recommendations_val = compute_recommendations(n_recipients, senders, train_info, conversation_ids_val, val_info,
                                               val_ids_per_sender, all_embeddings)
+
 print("Done!")
 
 print("Computing recommendations for train/test...")
@@ -122,7 +175,6 @@ recommendations_test = compute_recommendations(n_recipients, senders, training_i
 print("Done!")
 print("Computing score on validation set...")
 print("Score: {}".format(compute_prediction_mad(recommendations_val, val_info)))
-
 
 print("Writing file...")
 write_results_ranked(recommendations_val, path_to_results, "centroids_w2v_sw%s_validation.csv"%percentage_threshold)

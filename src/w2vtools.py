@@ -61,7 +61,7 @@ def avg_word2vec(body_dict, model):
 
 def compute_recommendations(n_recipients, senders, training_info, conversation_ids, test_info, test_ids_per_sender,
                             feat_dict):
-    """Returns recommendation dict : {mid: [rec1, rec2...] }"""
+    """Return recommendation dict : {mid: [rec1, rec2...] }"""
     recommendations = {}
     print("Computing for {} senders".format(len(senders)))
     pbar = tqdm(senders)
@@ -103,7 +103,6 @@ def get_closest(n, centroids_dict, from_feat):
     if n == 'max':
         return pd.Series(sims).sort_values(ascending=False)
     return pd.Series(sims).sort_values(ascending=False)[:n]
-
 
 def centroid(mail_feats_array):
     mean = np.mean(mail_feats_array, axis=0)
