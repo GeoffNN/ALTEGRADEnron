@@ -1,5 +1,5 @@
 import nltk
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 import numpy as np
 from scipy.sparse import vstack
 
@@ -36,3 +36,11 @@ def get_tfidf(token_dict, min_df=0.001, max_df=0.10):
 
 def sparse_norm(f_mail):
     return np.sqrt(f_mail.dot(f_mail.T))
+
+def get_count(token_dict, min_df=0.001, max_df=0.10):
+    count = CountVectorizer(tokenizer=get_tokens, min_df=min_df, max_df=max_df)
+    # if dic is not modified, keys and values are in the same order
+    keys = list(token_dict.keys())
+    values = token_dict.values()
+    counts = count.fit_transform(values)
+    return count, counts, keys

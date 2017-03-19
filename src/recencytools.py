@@ -2,7 +2,7 @@ from collections import Counter, defaultdict
 import operator
 import math
 import pandas as pd
-from tqdm import tqdm_notebook
+# from tqdm import tqdm_notebook
 
 
 def add_time_rank_to_dataframe(df):

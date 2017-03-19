@@ -38,6 +38,7 @@ def clean_string(string, punct=punct, my_regex=my_regex):
     return str
 
 def avg_word2vec(body_dict, model):
+    """ Returns average word2vec representations dict : {mid : avg_w2v_representation} """
     embeddings = {}
     for key in body_dict.keys():
         avgword2vec = None
@@ -60,7 +61,7 @@ def avg_word2vec(body_dict, model):
 
 def compute_recommendations(n_recipients, senders, training_info, conversation_ids, test_info, test_ids_per_sender,
                             feat_dict):
-    """Return recommendation dict : {mid: [rec1, rec2...] }"""
+    """Returns recommendation dict : {mid: [rec1, rec2...] }"""
     recommendations = {}
     print("Computing for {} senders".format(len(senders)))
     pbar = tqdm(senders)
